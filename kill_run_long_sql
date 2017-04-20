@@ -1,0 +1,22 @@
+#!/bin/bash
+
+source ~/.bash_profile
+
+username="root"
+password="12345678"
+#timeout="10"
+
+date=`date +%Y%m%d\[%H:%M:%S]`
+
+echo -e "$date begin slow sql id killed" >> /opt/slow_sql.txt
+
+mysql -u$username -p$password -e "show full processlist;"|egrep 'root|hive'|awk '($6 > 10 && $5 == "Query") {print}'  >> /opt/slow_sql.txt
+
+echo -e "$date end slow sql id killed" >> /opt/slow_sql.txt
+
+mysql -u$username -p$password -e "show full processlist;"|egrep 'root|hive'|awk '($6 > 10 && $5 == "Query") {print $1}' > a.txt
+
+for id in `cat a.txt`
+do
+   mysql -u$username -p$password -e "kill $((id))"
+done
